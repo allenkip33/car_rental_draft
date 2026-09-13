@@ -1,0 +1,29 @@
+[
+    {
+        "rental_id": "R1",
+        "username": "john",
+        "car_id": "C001",
+        "start_date": "2026-09-12",
+        "end_date": "2026-09-15",
+        "price_per_day": 3000,
+        "status": "Cancelled"
+    },
+    {
+        "rental_id": "R2",
+        "username": "john2",
+        "car_id": "C002",
+        "start_date": "2026-09-20",
+        "end_date": "2026-09-23",
+        "price_per_day": 3500.0,
+        "status": "Cancelled"
+    },
+    {
+        "rental_id": "R3",
+        "username": "absam",
+        "car_id": "C001",
+        "start_date": "2026-09-13",
+        "end_date": "2026-09-18",
+        "price_per_day": 3000,
+        "status": "Cancelled"
+    }
+]

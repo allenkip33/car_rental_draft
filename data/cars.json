@@ -1,0 +1,18 @@
+[
+    {
+        "car_id": "C001",
+        "brand": "Toyota",
+        "model": "Corolla",
+        "year": 2022,
+        "price_per_day": 3000,
+        "available": true
+    },
+    {
+        "car_id": "C002",
+        "brand": "Honda",
+        "model": "Civic",
+        "year": 2023,
+        "price_per_day": 3500.0,
+        "available": true
+    }
+]
