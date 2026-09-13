@@ -1,14 +1,12 @@
 from functools import wraps
 
-
-def login_required(function):
-    # Check that a user is logged in
-    @wraps(function)
-    def wrapper(auth_service, *args, **kwargs):
-        if auth_service.current_user is None:
-            print("Please login first.")
-            return None
-
-        return function(auth_service, *args, **kwargs)
-
-    return wrapper
+def login_required(auth_service):
+    def decorator(function):
+        @wraps(function)
+        def wrapper(*args, **kwargs):
+            if auth_service.current_user is None:
+                print("\n[bold red]Please login first.[/bold red]")
+                return None
+            return function(*args, **kwargs)
+        return wrapper
+    return decorator
