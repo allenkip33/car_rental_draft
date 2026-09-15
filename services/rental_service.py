@@ -14,12 +14,22 @@ class RentalService:
         e2 = date.fromisoformat(end2_str)
         return s1 < e2 and e1 > s2
 
+    def is_active_today(self, start_date_str, end_date_str):
+        today = date.today()
+        return date.fromisoformat(start_date_str) <= today < date.fromisoformat(end_date_str)
+
+    def refresh_car_availability(self, car, rentals):
+        car["available"] = not any(
+            r["car_id"] == car["car_id"] and r["status"] == "Active" and self.is_active_today(r["start_date"], r["end_date"])
+            for r in rentals
+        )
+
     def create_rental(self, username, car_id, start_date, end_date):
         cars = self.data_manager.load_data(self.cars_file)
         rentals = self.data_manager.load_data(self.rentals_file)
 
         car = next((item for item in cars if item["car_id"] == car_id), None)
-        if car is None or not car["available"]:
+        if car is None:
             return None
 
         for r_dict in rentals:
@@ -28,7 +38,7 @@ class RentalService:
                     return None
 
         rental_id = f"R{len(rentals) + 1}"
-        
+
         rental_obj = Rental(
             rental_id,
             username,
@@ -39,7 +49,7 @@ class RentalService:
         )
 
         rentals.append(rental_obj.to_dict())
-        car["available"] = False
+        self.refresh_car_availability(car, rentals)
 
         self.data_manager.save_data(self.rentals_file, rentals)
         self.data_manager.save_data(self.cars_file, cars)
@@ -56,10 +66,10 @@ class RentalService:
                     return False
 
                 rental["status"] = "Cancelled"
-                
+
                 for car in cars:
                     if car["car_id"] == rental["car_id"]:
-                        car["available"] = True
+                        self.refresh_car_availability(car, rentals)
 
                 self.data_manager.save_data(self.rentals_file, rentals)
                 self.data_manager.save_data(self.cars_file, cars)

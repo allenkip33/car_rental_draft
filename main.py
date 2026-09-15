@@ -4,7 +4,7 @@ from rich.table import Table
 from services.auth import AuthService
 from services.data_manager import DataManager
 from services.rental_service import RentalService
-from utils.validators import validate_date, validate_required
+from utils.validators import validate_future_date, validate_date_range, validate_required, validate_price, validate_year
 from utils.decorators import login_required
 
 console = Console()
@@ -21,8 +21,8 @@ require_auth = login_required(auth)
 
 def register():
     console.print("\n--- Register ---")
-    username = input("Enter username: ")
-    password = input("Enter password: ")
+    username = input("Enter username: ").strip()
+    password = input("Enter password: ").strip()
 
     if not validate_required(username) or not validate_required(password):
         console.print("[red]Username and password are required.[/red]")
@@ -35,8 +35,8 @@ def register():
 
 def login():
     console.print("\n--- Login ---")
-    username = input("Enter username: ")
-    password = input("Enter password: ")
+    username = input("Enter username: ").strip()
+    password = input("Enter password: ").strip()
 
     user = auth.login(username, password)
     if user:
@@ -76,11 +76,11 @@ def add_car():
         return
 
     console.print("\n--- Add Car ---")
-    car_id = input("Enter car ID: ")
-    brand = input("Enter brand: ")
-    model = input("Enter model: ")
-    year = input("Enter year: ")
-    price = input("Enter price per day: ")
+    car_id = input("Enter car ID: ").strip()
+    brand = input("Enter brand: ").strip()
+    model = input("Enter model: ").strip()
+    year = input("Enter year: ").strip()
+    price = input("Enter price per day: ").strip()
 
     if not validate_required(car_id):
         console.print("[red]Car ID is required.[/red]")
@@ -91,18 +91,22 @@ def add_car():
         console.print("[red]Car ID already exists.[/red]")
         return
 
-    try:
-        new_car = {
-            "car_id": car_id,
-            "brand": brand,
-            "model": model,
-            "year": int(year),
-            "price_per_day": float(price),
-            "available": True
-        }
-    except ValueError:
-        console.print("[red]Year and price must be valid numbers.[/red]")
+    if not validate_year(year):
+        console.print("[red]Year must be a valid year between 1900 and next year.[/red]")
         return
+
+    if not validate_price(price):
+        console.print("[red]Price per day must be a positive number.[/red]")
+        return
+
+    new_car = {
+        "car_id": car_id,
+        "brand": brand,
+        "model": model,
+        "year": int(year),
+        "price_per_day": float(price),
+        "available": True
+    }
 
     cars.append(new_car)
     manager.save_data(CARS_FILE, cars)
@@ -114,12 +118,16 @@ def rent_car():
     console.print("\n--- Rent a Car ---")
     list_cars()
 
-    car_id = input("Enter car ID: ")
-    start_date = input("Enter start date (YYYY-MM-DD): ")
-    end_date = input("Enter end date (YYYY-MM-DD): ")
+    car_id = input("Enter car ID: ").strip()
+    start_date = input("Enter start date (YYYY-MM-DD): ").strip()
+    end_date = input("Enter end date (YYYY-MM-DD): ").strip()
 
-    if not validate_date(start_date) or not validate_date(end_date):
-        console.print("[red]Invalid date format detected.[/red]")
+    if not validate_future_date(start_date):
+        console.print("[red]Start date must be a valid date and cannot be in the past.[/red]")
+        return
+
+    if not validate_date_range(start_date, end_date):
+        console.print("[red]End date must be a valid date after the start date.[/red]")
         return
 
     rental = rental_service.create_rental(user.username, car_id, start_date, end_date)
@@ -158,7 +166,7 @@ def cancel_rental():
     console.print("\n--- Cancel Rental ---")
     list_rentals()
 
-    rental_id = input("Enter rental ID to cancel: ")
+    rental_id = input("Enter rental ID to cancel: ").strip()
     rentals = manager.load_data(RENTALS_FILE)
     
     rental_item = next((r for r in rentals if r["rental_id"] == rental_id), None)
@@ -177,6 +185,7 @@ def cancel_rental():
 
 def main():
     while True:
+        console.clear()
         console.print("    CAR RENTAL SYSTEM")
         console.print("================================")
 
@@ -201,6 +210,8 @@ def main():
             break
         else:
             console.print("[red]Invalid choice. Please select 1-9.[/red]")
+
+        input("\nPress Enter to continue...")
 
 if __name__ == "__main__":
     main()
